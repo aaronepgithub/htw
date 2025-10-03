@@ -1,0 +1,59 @@
+Visual Assets
+1. Characters (Sprites)
+Each rider should have at least two poses:
+- Base pedaling pose (steady effort).
+- Surge pose (more intense, exaggerated expression, speed lines, body leaning forward).
+Hero (Player)
+- Base: determined expression, jersey in your chosen team colors.
+- Surge: teeth gritted, sweat drops, glowing aura (classic shōnen power‑up vibe).
+Villains
+x Rouleur
+- Base: broad shoulders, calm but powerful.
+- Surge: veins popping, heavy aura, glowing legs.
+x Climber
+- Base: lean, standing on pedals, focused eyes.
+- Surge: hair flying, aura rising upward like flames.
+x Sprinter
+- Base: crouched low, explosive posture.
+- Surge: exaggerated speed lines, almost bursting off the bike
+
+ Sprite size suggestion: 64×64 or 128×128 pixels (PNG with transparency).
+👉 Optional: Add “chibi” caricature versions for fun mode.
+
+2. Backgrounds
+- Town: pastel houses, cobblestone roads, flags.
+- Rolling Hills: green fields, vineyards, winding roads.
+- Mountains: dramatic switchbacks, mist, snow‑capped peaks.
+👉 Use parallax layers: sky, mid‑ground hills, road.
+
+3. UI / FX
+- Drafting aura: glowing slipstream behind villain’s wheel (blue/green glow).
+- Surge effect: anime “impact frame” (white flash + speed lines).
+- Momentum bar: styled like a shōnen “energy meter.”
+- Score pop‑ups: bold comic font with “+10!” bursts.
+
+🔊 Audio Assets
+1. Core Feedback
+- Draft in: pleasant chime or rising tone.
+- Draft out: buzzer or distorted wind.
+- Momentum low: heartbeat or warning beep.
+2. Villain Surges
+- Rouleur: deep rumble, like a train accelerating.
+- Climber: sharp whoosh with rising pitch.
+- Sprinter: explosive “BAM!” or whip‑like crack.
+3. Ambient
+- Wind loop (intensity scales with speed).
+- Chain whir / gear click loop.
+- Occasional crowd cheer when passing towns.
+4. Optional Voice Stingers (Shōnen Flavor)
+- Short Japanese‑style exclamations:
+- “Ikuzo!” (Let’s go!)
+- “Ganbare!” (Do your best!)
+- “Yosh!” (Alright!)
+- Villains taunting: “You can’t hold my wheel!”
+
+📐 Technical Notes
+- Sprites: PNG, transparent background, consistent scale.
+- Backgrounds: Wide images (e.g., 960×320) that can tile/scroll.
+- Sounds: MP3 or OGG, <5 seconds for stingers, loopable for ambients.
+- Style: Bold outlines, saturated colors, exaggerated expressions—classic shōnen anime energy.

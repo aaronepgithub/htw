@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Hold the Wheel – Villain Lifecycle</title>
+  <style>
+    body { margin:0; font-family:sans-serif; background:#0f1220; color:#e8ecf1; }
+    .hud { display:flex; justify-content:space-between; padding:8px; background:#171a2a; }
+    canvas { display:block; margin:0 auto; background:#0c1020; width:100%; max-width:960px; height:320px; }
+    .controls { text-align:center; margin:10px; }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div>Power: <span id="powerOut">180</span> W</div>
+    <div>Speed: <span id="speedOut">0</span> km/h</div>
+    <div>Villain: <span id="villName">None</span></div>
+    <div>Gap: <span id="gapOut">—</span></div>
+    <div>Score: <span id="scoreOut">0</span></div>
+  </div>
+  <canvas id="gameCanvas" width="960" height="320"></canvas>
+  <div class="controls">
+    <input id="powerSlider" type="range" min="0" max="800" value="180"/>
+    <button id="startBtn">Start / Restart</button>
+  </div>
+
+  <!-- Audio placeholders -->
+  <audio id="draftIn" src="sounds/draft_in.mp3"></audio>
+  <audio id="draftOut" src="sounds/draft_out.mp3"></audio>
+  <audio id="rouleurSurge" src="sounds/rouleur_surge.mp3"></audio>
+  <audio id="climberSurge" src="sounds/climber_surge.mp3"></audio>
+  <audio id="sprinterSurge" src="sounds/sprinter_surge.mp3"></audio>
+  <audio id="wind" src="sounds/wind.mp3" loop></audio>
+
+  <script>
+    // --- Load sprites ---
+    const heroImg = new Image(); heroImg.src = "sprites/hero.png";
+    const villainImgs = {
+      rouleur: { base: new Image(), surge: new Image() },
+      climber: { base: new Image(), surge: new Image() },
+      sprinter: { base: new Image(), surge: new Image() }
+    };
+    villainImgs.rouleur.base.src="sprites/rouleur_base.png";
+    villainImgs.rouleur.surge.src="sprites/rouleur_surge.png";
+    villainImgs.climber.base.src="sprites/climber_base.png";
+    villainImgs.climber.surge.src="sprites/climber_surge.png";
+    villainImgs.sprinter.base.src="sprites/sprinter_base.png";
+    villainImgs.sprinter.surge.src="sprites/sprinter_surge.png";
+
+    // --- Physics constants ---
+    const MASS=79.4,G=9.81,RHO=1.225,CDA=0.32,CRR=0.004,EFF=0.97,MS2KMH=3.6;
+    const DRAFT_GAP=1.5,DRAFT_DIFF=0.5;
+
+    // --- Villain durations ---
+    const VILLAIN_DURATIONS = { rouleur:30, climber:20, sprinter:10 };
+
+    // --- State ---
+    let running=false,lastTs=0;
+    let player={power:180,speed:0,pos:0};
+    let villain={active:false,type:null,power:0,speed:0,pos:5,timeLeft:0};
+    let score=0,wasDrafting=false;
+
+    // --- DOM ---
+    const powerSlider=document.getElementById("powerSlider");
+    const powerOut=document.getElementById("powerOut");
+    const speedOut=document.getElementById("speedOut");
+    const villName=document.getElementById("villName");
+    const gapOut=document.getElementById("gapOut");
+    const scoreOut=document.getElementById("scoreOut");
+    const canvas=document.getElementById("gameCanvas"),ctx=canvas.getContext("2d");
+
+    powerSlider.oninput=()=>{player.power=parseInt(powerSlider.value); powerOut.textContent=player.power;};
+    document.getElementById("startBtn").onclick=startGame;
+
+    function speedFromPower(P,grade=0){
+      if(P<=1)return 0;
+      function f(v){const Froll=CRR*MASS*G, Fgrav=MASS*G*grade, Fdrag=0.5*RHO*CDA*v*v;
+        return ((Froll+Fgrav)*v+Fdrag*v)/EFF;}
+      let lo=0,hi=25,mid;
+      for(let i=0;i<25;i++){mid=(lo+hi)/2; if(f(mid)>P)hi=mid; else lo=mid;}
+      return mid;
+    }
+
+    function startGame(){
+      running=true; lastTs=performance.now();
+      player={power:parseInt(powerSlider.value),speed:0,pos:0};
+      score=0; wasDrafting=false;
+      spawnVillain(); // start with one villain
+      document.getElementById("wind").play();
+      requestAnimationFrame(tick);
+    }
+
+    function spawnVillain(){
+      const keys=["rouleur","climber","sprinter"];
+      const key=keys[Math.floor(Math.random()*keys.length)];
+      villain={active:true,type:key,power:300,speed:0,pos:player.pos+5,timeLeft:VILLAIN_DURATIONS[key]};
+      villName.textContent=key;
+    }
+
+    function endVillain(){
+      villain.active=false;
+      villain.type=null;
+      villName.textContent="None";
+      // schedule next villain after 10–40s
+      const wait=1000*(10+Math.random()*30);
+      setTimeout(()=>{ if(running && !villain.active) spawnVillain(); },wait);
+    }
+
+    function tick(ts){
+      if(!running)return;
+      const dt=Math.min(0.05,(ts-lastTs)/1000); lastTs=ts;
+      player.speed=speedFromPower(player.power); player.pos+=player.speed*dt;
+      if(villain.active){
+        villain.speed=speedFromPower(villain.power); villain.pos+=villain.speed*dt;
+        villain.timeLeft-=dt;
+        if(villain.timeLeft<=0){ endVillain(); }
+      }
+      let gap=Infinity;
+      let drafting=false;
+      if(villain.active){
+        gap=Math.abs(villain.pos-player.pos);
+        drafting=(gap<=DRAFT_GAP && Math.abs(villain.speed-player.speed)<=DRAFT_DIFF);
+      }
+      if(drafting&&!wasDrafting)document.getElementById("draftIn").play();
+      if(!drafting&&wasDrafting)document.getElementById("draftOut").play();
+      wasDrafting=drafting;
+      if(drafting)score+=dt*10;
+      // UI
+      powerOut.textContent=player.power;
+      speedOut.textContent=(player.speed*MS2KMH).toFixed(1);
+      gapOut.textContent=isFinite(gap)?gap.toFixed(2)+" m":"—";
+      scoreOut.textContent=Math.floor(score);
+      // Render
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      const baseY=200,centerX=canvas.width/2;
+      ctx.drawImage(heroImg,centerX-32,baseY,64,64);
+      if(villain.active){
+        const villX=centerX+(villain.pos-player.pos)*40;
+        ctx.drawImage(villainImgs[villain.type].base,villX-32,baseY-64,64,64);
+      }
+      requestAnimationFrame(tick);
+    }
+  </script>
+</body>
+</html>
