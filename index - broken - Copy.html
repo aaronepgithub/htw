@@ -85,20 +85,39 @@
             <input id="powerSlider" type="range" min="50" max="800" value="180"/>
             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="#f59e0b" viewBox="0 0 256 256"><path d="M168,40a96.1,96.1,0,0,0-85.35,50.2L52,70.51A104,104,0,1,1,42.42,152H64a80,80,0,1,0,7.38-32H96a56,56,0,1,1,50.62,29.32L128,172a24,24,0,1,0,24-24h16a40,40,0,1,1-35.35-21.32L144,148a8,8,0,0,0,16,0l-12.27-24.53A79.54,79.54,0,0,0,168,120a80,80,0,0,0-79.37-72H112a56,56,0,0,1,50.31-27.23A56.53,56.53,0,0,1,168,24a56,56,0,0,1,56,56H200a80,80,0,0,0-32-64ZM128,200a72,72,0,1,1,72-72A72.08,72.08,0,0,1,128,200Z"></path></svg>
         </div>
-        <button id="startBtn" class="mt-4 px-8 py-3 bg-amber-500 text-gray-900 font-bold rounded-lg text-xl shadow-lg hover:bg-amber-400 transition-all transform hover:scale-105 disabled:bg-gray-500">Start Ride</button>
+        <button id="startBtn" class="mt-4 px-8 py-3 bg-amber-500 text-gray-900 font-bold rounded-lg text-xl shadow-lg hover:bg-amber-400 transition-all transform hover:scale-105">Start Ride</button>
     </div>
   </div>
 
   <div id="surge-container"></div>
   
   <script>
-    function loadImage(src) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = (err) => reject(err);
-            img.src = src;
-        });
+    // --- Asset Generation ---
+    const SVG_ASSETS = {
+        hero: {
+            base: `<svg viewBox="0 0 64 64"><g transform="translate(0, 4)"><path d="M32 30 C 40 18, 48 22, 48 30 L 44 48 L 20 48 L 16 30 C 16 22, 24 18, 32 30" fill="#3b82f6"/><path d="M32,16 a8,8 0 1,1 0,16 a8,8 0 1,1 0,-16" fill="#fde047"/><circle cx="20" cy="56" r="6" fill="#374151" stroke="#e5e7eb" stroke-width="2"/><circle cx="44" cy="56" r="6" fill="#374151" stroke="#e5e7eb" stroke-width="2"/><line x1="20" y1="56" x2="32" y2="42" stroke="#e5e7eb" stroke-width="2"/><line x1="44" y1="56" x2="32" y2="42" stroke="#e5e7eb" stroke-width="2"/></g></svg>`,
+            surge: `<svg viewBox="0 0 64 64"><g transform="translate(0, 4) rotate(-10 32 32)"><path d="M32 30 C 40 18, 48 22, 48 30 L 44 48 L 20 48 L 16 30 C 16 22, 24 18, 32 30" fill="#2563eb"/><path d="M32,16 a8,8 0 1,1 0,16 a8,8 0 1,1 0,-16" fill="#fef08a"/><circle cx="20" cy="56" r="6" fill="#374151" stroke="#e5e7eb" stroke-width="2"/><circle cx="44" cy="56" r="6" fill="#374151" stroke="#e5e7eb" stroke-width="2"/><line x1="20" y1="56" x2="32" y2="42" stroke="#e5e7eb" stroke-width="2"/><line x1="44" y1="56" x2="32" y2="42" stroke="#e5e7eb" stroke-width="2"/></g></svg>`
+        },
+        rouleur: {
+            base: `<svg viewBox="0 0 64 64"><g transform="translate(0, 4)"><path d="M32 28 C 44 18, 52 24, 52 32 L 48 50 L 16 50 L 12 32 C 12 24, 20 18, 32 28" fill="#ef4444"/><path d="M32,14 a9,9 0 1,1 0,18 a9,9 0 1,1 0,-18" fill="#d1d5db"/><circle cx="20" cy="56" r="6" fill="#1f2937" stroke="#9ca3af" stroke-width="2"/><circle cx="44" cy="56" r="6" fill="#1f2937" stroke="#9ca3af" stroke-width="2"/></g></svg>`,
+            surge: `<svg viewBox="0 0 64 64"><g transform="translate(0, 4) rotate(-5 32 32)"><path d="M32 28 C 44 18, 52 24, 52 32 L 48 50 L 16 50 L 12 32 C 12 24, 20 18, 32 28" fill="#dc2626"/><path d="M32,14 a9,9 0 1,1 0,18 a9,9 0 1,1 0,-18" fill="#f9fafb"/><circle cx="20" cy="56" r="6" fill="#1f2937" stroke="#ef4444" stroke-width="2"/><circle cx="44" cy="56" r="6" fill="#1f2937" stroke="#ef4444" stroke-width="2"/></g></svg>`
+        },
+        climber: {
+            base: `<svg viewBox="0 0 64 64"><g transform="translate(0, 4) rotate(15 32 32)"><path d="M32 32 C 38 22, 44 26, 44 32 L 40 50 L 24 50 L 20 32 C 20 26, 26 22, 32 32" fill="#22c55e"/><path d="M32,18 a7,7 0 1,1 0,14 a7,7 0 1,1 0,-14" fill="#d1d5db"/><circle cx="20" cy="56" r="6" fill="#1f2937" stroke="#9ca3af" stroke-width="2"/><circle cx="44" cy="56" r="6" fill="#1f2937" stroke="#9ca3af" stroke-width="2"/></g></svg>`,
+            surge: `<svg viewBox="0 0 64 64"><g transform="translate(0, 4) rotate(20 32 32)"><path d="M32 32 C 38 22, 44 26, 44 32 L 40 50 L 24 50 L 20 32 C 20 26, 26 22, 32 32" fill="#16a34a"/><path d="M32,18 a7,7 0 1,1 0,14 a7,7 0 1,1 0,-14" fill="#f9fafb"/><circle cx="20" cy="56" r="6" fill="#1f2937" stroke="#22c55e" stroke-width="2"/><circle cx="44" cy="56" r="6" fill="#1f2937" stroke="#22c55e" stroke-width="2"/></g></svg>`
+        },
+        sprinter: {
+            base: `<svg viewBox="0 0 64 64"><g transform="translate(0, 4) rotate(-20 32 32)"><path d="M32 34 C 42 28, 50 32, 50 38 L 46 52 L 18 52 L 14 38 C 14 32, 22 28, 32 34" fill="#a855f7"/><path d="M32,22 a6,6 0 1,1 0,12 a6,6 0 1,1 0,-12" fill="#d1d5db"/><circle cx="20" cy="56" r="6" fill="#1f2937" stroke="#9ca3af" stroke-width="2"/><circle cx="44" cy="56" r="6" fill="#1f2937" stroke="#9ca3af" stroke-width="2"/></g></svg>`,
+            surge: `<svg viewBox="0 0 64 64"><g transform="translate(0, 4) rotate(-25 32 32)"><path d="M32 34 C 42 28, 50 32, 50 38 L 46 52 L 18 52 L 14 38 C 14 32, 22 28, 32 34" fill="#9333ea"/><path d="M32,22 a6,6 0 1,1 0,12 a6,6 0 1,1 0,-12" fill="#f9fafb"/><circle cx="20" cy="56" r="6" fill="#1f2937" stroke="#a855f7" stroke-width="2"/><circle cx="44" cy="56" r="6" fill="#1f2937" stroke="#a855f7" stroke-width="2"/></g></svg>`
+        }
+    };
+    function createSvgImage(svgString) {
+        const img = new Image();
+        const blob = new Blob([svgString], {type: 'image/svg+xml'});
+        const url = URL.createObjectURL(blob);
+        img.src = url;
+        img.onload = () => URL.revokeObjectURL(url);
+        return img;
     }
 
     // --- Audio Generation ---
@@ -113,37 +132,12 @@
     sounds.wind.volume.value = -25;
     
     // --- Sprite Loading ---
-    let heroSprite = null;
-    let villainSprites = null;
-    let assetsLoaded = false;
-
-    async function loadAssets() {
-        if (assetsLoaded) return;
-
-        const [
-            hero,
-            rouleurBase, rouleurSurge,
-            climberBase, climberSurge,
-            sprinterBase, sprinterSurge
-        ] = await Promise.all([
-            loadImage('sprites/hero.png'),
-            loadImage('sprites/rouleur_base.png'),
-            loadImage('sprites/rouleur_surge.png'),
-            loadImage('sprites/climber_base.png'),
-            loadImage('sprites/climber_surge.png'),
-            loadImage('sprites/sprinter_base.png'),
-            loadImage('sprites/sprinter_surge.png')
-        ]);
-
-        heroSprite = { base: hero, surge: hero }; // Use hero.png for both
-        villainSprites = {
-            rouleur: { base: rouleurBase, surge: rouleurSurge },
-            climber: { base: climberBase, surge: climberSurge },
-            sprinter: { base: sprinterBase, surge: sprinterSurge }
-        };
-
-        assetsLoaded = true;
-    }
+    const heroSprite = { base: createSvgImage(SVG_ASSETS.hero.base), surge: createSvgImage(SVG_ASSETS.hero.surge) };
+    const villainSprites = {
+      rouleur: { base: createSvgImage(SVG_ASSETS.rouleur.base), surge: createSvgImage(SVG_ASSETS.rouleur.surge) },
+      climber: { base: createSvgImage(SVG_ASSETS.climber.base), surge: createSvgImage(SVG_ASSETS.climber.surge) },
+      sprinter: { base: createSvgImage(SVG_ASSETS.sprinter.base), surge: createSvgImage(SVG_ASSETS.sprinter.surge) }
+    };
     
     // --- Physics & Game constants ---
     const MASS=79.4,GRAVITY=9.81,RHO=1.225,CDA=0.32,CRR=0.004,EFF=0.97,MS2KMH=3.6;
@@ -170,7 +164,6 @@
     const scoreOut=document.getElementById("scoreOut");
     const canvas=document.getElementById("gameCanvas"),ctx=canvas.getContext("2d");
     const surgeContainer = document.getElementById("surge-container");
-    const startBtn = document.getElementById("startBtn");
 
     function resizeCanvas() {
         const container = document.getElementById('game-container');
@@ -187,22 +180,10 @@
         player.isSurging = player.power > 400;
     };
 
-    startBtn.onclick = async () => {
+    document.getElementById("startBtn").onclick = async () => {
         await Tone.start();
         console.log("Audio context started");
-        
-        startBtn.disabled = true;
-        startBtn.textContent = "Loading Assets...";
-
-        try {
-            await loadAssets();
-            startBtn.textContent = "Start Ride";
-            startBtn.disabled = false;
-            startGame();
-        } catch (error) {
-            console.error("Failed to load assets:", error);
-            startBtn.textContent = "Error - Refresh";
-        }
+        startGame();
     };
 
     function speedFromPower(power, grade = 0, drafting = false){
@@ -289,13 +270,13 @@
             let surgePower = 200;
             if (villain.type === 'climber') {
                 surgePower = 250;
-                sounds.climberSurge.triggerAttackRelease("0.5s");
+                sounds.climberSurge.triggerAttackRelease("C2", "0.5s");
             } else if (villain.type === 'rouleur') {
                 surgePower = 150;
                 sounds.rouleurSurge.triggerAttackRelease("C1", "1.2s");
             } else if (villain.type === 'sprinter') {
                 surgePower = 600;
-                sounds.sprinterSurge.triggerAttackRelease(0.3);
+                sounds.sprinterSurge.triggerAttackRelease("now");
             }
             villain.power += surgePower;
             villain.surgeCooldown = 5 + Math.random() * 5; // Reset cooldown
@@ -305,8 +286,9 @@
 
 
     function tick(ts){
-      if(!running || !assetsLoaded) return; // Don't run if game stopped or assets not loaded
+      if(!running)return;
       const dt=Math.min(0.05,(ts-lastTs)/1000); lastTs=ts;
+        
 
       // --- Update state ---
       currentGrade = Math.sin(player.pos / 150) * 0.05; // Gentle rolling hills grade
@@ -385,7 +367,15 @@
       const playerX = w * 0.3;
       const playerY = baseY - 64 + Math.sin(player.pos / (Math.PI/2)) * 3; // Bobbing motion
       const playerSprite = player.isSurging ? heroSprite.surge : heroSprite.base;
-      ctx.drawImage(playerSprite, playerX - 32, playerY, 64, 64);
+    //   ctx.drawImage(playerSprite, playerX - 32, playerY, 64, 64);
+
+      
+    if (!playerSprite && playerSprite.complete)return; // Wait for sprite load
+    if (!villainSprites.rouleur.base.complete || !villainSprites.climber.base.complete || !villainSprites.sprinter.base.complete) return;
+
+    if (playerSprite && playerSprite.complete && !playerSprite.naturalWidth === 0) {
+        ctx.drawImage(playerSprite, playerX - 32, playerY, 64, 64);
+    };
       
       if(villain.active){
         const villainX = playerX + gap * 20; // Scale gap for visual distance
@@ -404,8 +394,15 @@
                 ctx.fillRect(auraX - 40, auraY - 40, 80, 80);
             }
             
-            // Draw villain
+
+            if (villainSprite && villainSprite.complete && !villainSprite.naturalWidth === 0) {
+
+                // Draw villain
             ctx.drawImage(villainSprite, villainX - 32, villainY, 64, 64);
+
+            }
+
+            
         }
       }
 
